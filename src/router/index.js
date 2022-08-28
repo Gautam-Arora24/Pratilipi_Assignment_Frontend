@@ -1,25 +1,40 @@
-import { createRouter, createWebHashHistory } from 'vue-router';
-import HomeView from '../views/HomeView.vue';
+import { createRouter, createWebHistory } from 'vue-router';
+import SignUp from '../views/SignUp.vue';
+import Dashboard from '../views/Dashboard.vue';
 
 const routes = [
   {
     path: '/',
-    name: 'home',
-    component: HomeView,
+    name: 'signup',
+    component: SignUp,
   },
   {
-    path: '/about',
-    name: 'about',
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue'),
+    path: '/dashboard',
+    name: 'dashboard',
+    component: Dashboard,
   },
 ];
 
 const router = createRouter({
-  history: createWebHashHistory(),
+  history: createWebHistory(),
   routes,
+});
+
+/* Redirect logic to redirect the user if the user_id is not present in the localStorage and vice-versa */
+router.beforeEach(async (to) => {
+  if (
+    !localStorage.getItem('user_id')
+    // ❗️ Avoid an infinite redirect
+    && to.name === 'dashboard'
+  ) {
+    // redirect the user to the Signup page
+    return { name: 'signup' };
+  }
+  if (
+    localStorage.getItem('user_id') && to.name === 'signup'
+  ) {
+    return { name: 'dashboard' };
+  }
 });
 
 export default router;
