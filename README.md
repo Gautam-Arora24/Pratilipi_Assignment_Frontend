@@ -56,3 +56,5 @@ Some Important Links regarding the project->
 - [Youtube Video demonstrating the project](https://youtu.be/JPWkoN0QYBE)
 
 - [Architecture Diagram for the Backend](https://whimsical.com/pratilipi-NzVMVafSYYGvQEMfrnASBD)
+
+- [Backend Repository for the assignment](https://github.com/Gautam-Arora24/Pratilipi_Assignment_Backend)
