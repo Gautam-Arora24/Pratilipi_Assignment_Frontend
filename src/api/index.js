@@ -26,3 +26,15 @@ export async function topContent() {
     }
   }
 }
+
+export async function incrementLikeCount(contentId){
+  try{
+    const result = await instance.post(`${BASE_URL}/user/like/${contentId}`);
+    return result.data;
+  }
+  catch(err){
+    if(err.response.data){
+      return err.response.data;
+    }
+  }
+}

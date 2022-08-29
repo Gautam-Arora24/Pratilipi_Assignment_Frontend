@@ -94,6 +94,10 @@ export default {
       },
     };
   },
+
+  created(){
+    document.title = "Signup";
+  },
   methods: {
     handleSubmit() {
       this.submitted = true;

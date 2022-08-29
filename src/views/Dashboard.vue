@@ -1,6 +1,9 @@
 <template>
     <div class="card">
-      <DataView :value="content" :layout="layout">
+      <Modal :displayBasic="displayModal" :modalData="modalData" @closeModal="closeModal"/>
+      <ScrollTop :threshold="200"/>
+      <div v-if="loading">Loading...</div>
+      <DataView v-else :value="content" :layout="layout">
       <template #header>
           <div class="grid grid-nogutter">
               <div class="col-6" style="text-align: left">
@@ -10,40 +13,33 @@
               </div>
           </div>
 			</template>
-      <template #empty>No content to show.</template>
+      <template #empty>{{'No contents to show'}}</template>
       <template #list="slotProps">
 				<div class="col-12">
-					<div class="content-list-item">
-						<img src="https://www.primefaces.org/wp-content/uploads/2020/05/placeholder.png" alt="Image of a book"/>
+					<div class="content-list-item cursor-pointer">
+						<img src="https://picsum.photos/id/237/200/300" alt="Image of a book"
+            @click="handleDisplayModal(slotProps.data)"/>
 						<div class="content-list-detail">
-							<div class="content-name">{{slotProps.data.story}}</div>
-							<div class="content-description">{{slotProps.data.title}}</div>
-							<Rating :modelValue="slotProps.data.rating" :readonly="true" :cancel="false"></Rating>
-							<i class="pi pi-thumbs-up content-like-icon"></i><span class="content-like">{{slotProps.data.likes}}</span>
+							<div class="content-name">{{slotProps.data.title}}</div>
 						</div>
 						<div class="content-list-action">
-							<span class="content-price">${{slotProps.data.story}}</span>
-						</div>
+              <i class="pi pi-thumbs-up content-like-icon" @click="updateLike(slotProps.data._id,slotProps.index)"></i><span class="content-like">{{slotProps.data.likes}}</span>
+ 						</div>
 					</div>
 				</div>
 			</template>
 			<template #grid="slotProps">
-        <div class="col-12 md:col-4">
-					<div class="content-grid-item card">
+        <div class="col-12 md:col-4 ">
+					<div class="content-grid-item card cursor-pointer">
 						<div class="content-grid-item-top">
 							<div>
-								<i class="pi pi-thumbs-up content-like-icon"></i>
+								<i class="pi pi-thumbs-up content-like-icon" @click="updateLike(slotProps.data._id,slotProps.index)"></i>
 								<span class="content-like">{{slotProps.data.likes}}</span>
 							</div>
 							<span :class="'content-badge status-'+slotProps.data.story.toLowerCase()">{{slotProps.data.title}}</span>
 						</div>
 						<div class="content-grid-item-content">
-							<img src="https://www.primefaces.org/wp-content/uploads/2020/05/placeholder.png" :alt="slotProps.data.name"/>
-							<div class="content-name">{{slotProps.data.likes}}</div>
-							<div class="content-description">{{slotProps.data._id}}</div>
-						</div>
-						<div class="content-grid-item-bottom">
-							<span class="content-price">${{slotProps.data.likes}}</span>
+							<img src="https://picsum.photos/id/237/200/300" @click="handleDisplayModal(slotProps.data)" alt="Image of a book"/>
 						</div>
 					</div>
 				</div>
@@ -56,26 +52,65 @@
 <script>
 import DataView from 'primevue/dataview';
 import DataViewLayoutOptions from 'primevue/dataviewlayoutoptions';
-import { topContent } from '../api';
+import Modal from "../components/Modal"
+import ScrollTop from 'primevue/scrolltop';
+import { topContent, incrementLikeCount } from '../api';
 
 export default {
   components: {
     DataView,
     DataViewLayoutOptions,
+    Modal,
+    ScrollTop,
   },
   data() {
     return {
       layout: 'grid',
       content: null,
+      loading: false,
+      displayModal:false,
+      modalData : null,
     };
   },
+
   mounted() {
-    // eslint-disable-next-line no-return-assign
+    this.loading = true;
     topContent().then((data) => {
       this.content = data;
+      this.loading = false;
     });
   },
+
+  created(){
+    document.title = 'Dashboard';
+    this.$store.state.socket.on('incrementLikeCount', (data) => {
+      const id = data.contentId;
+      let indexToChange;
+      this.content.map((item,index) => {
+        if(item._id === id){
+          indexToChange = index;
+        }
+      })
+      this.content[indexToChange].likes = data.likes;
+    });
+  },
+
   methods: {
+    handleDisplayModal(data){
+      this.modalData = data;
+      this.displayModal = true;
+    },
+
+    closeModal(){
+      this.modalData = null;
+      this.displayModal = false;
+    },
+
+    updateLike(contentId,index) {
+      incrementLikeCount(contentId).then(data=>{
+        this.index = index;
+      })
+    },
 
   },
 };
@@ -88,6 +123,12 @@ export default {
     box-shadow: 0 2px 1px -1px rgba(0,0,0,.2), 0 1px 1px 0 rgba(0,0,0,.14), 0 1px 3px 0 rgba(0,0,0,.12);
     border-radius: 4px;
     margin-bottom: 2rem;
+}
+.content-list-item:hover{
+background-color:#f6f9fc;
+}
+.card:hover{
+ background-color:#f6f9fc;
 }
 .p-dropdown {
     width: 14rem;
@@ -118,6 +159,7 @@ export default {
 	align-items: center;
 	padding: 1rem;
 	width: 100%;
+  cursor:pointer;
 
 	img {
 		width: 50px;
@@ -201,7 +243,7 @@ export default {
 		.content-list-action {
 			margin-top: 2rem;
 			flex-direction: row;
-			justify-content: space-between;
+			justify-content: center;
 			align-items: center;
 			width: 100%;
 		}
